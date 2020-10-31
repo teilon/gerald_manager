@@ -1,5 +1,6 @@
 from flask_restful import Resource, request
 from models.item import ItemModel
+from models.relation import RelationModel
 from schemas.item import ItemSchema
 from schemas.relation import RelationSchema
 
@@ -40,10 +41,10 @@ class Item(Resource):
             data['parent'] = ItemModel.find_by_id(data['parent_id'])
 
             logging.warning('\nresources\nparent_id: {}\nchild_id: {}'.format(data['parent_id'], data['child_id']))
-            pprint(data)
+            # pprint(data)
             relation = relation_schema.load(data)
 
-            pprint(relation_schema.dump(relation))
+            # pprint(relation_schema.dump(relation))
             relation.save_to_db()
             return relation_schema.dump(relation), 201
         else:
@@ -59,10 +60,54 @@ class ItemList(Resource):
     def post(self):
         data = request.get_json()
 
-        for item_data in data:
-            item = item_schema.load(item_data)
+        ids = []
+
+        for x in data:
+
+            pprint(x)
+            
+            item = ItemModel.find_by_uri(x['uri'])
+            if not item:
+                item_dump = {'name': x['name'], 'uri': x['uri']}
+                item = item_schema.load(item_dump)
+                try:
+                    item.save_to_db()                
+                except:
+                    return {'message': 'An error occurre inserting the item.'}, 500            
+            
+            ids.append({'id_db': item.id, 'id_dump': x['id']})
+
+            if x['relation_id'] == -1:
+                continue
+            
+            base_id = item.id
+            second_id = next(filter(lambda a: a['id_dump'] == x['relation_id'], ids))['id_db']
+            relation = RelationModel.find_relation(base_id, second_id)
+            if relation:
+                continue
+
+            is_parent = False
+            is_wifehusband = False
+            if x['category'] == 'Отец':
+                is_parent = True
+            elif x['category'] == 'Мать':
+                is_parent = True
+            elif x['category'] == 'Супруг':
+                is_wifehusband = True
+            elif x['category'] == 'Супруга':
+                is_wifehusband = True
+            elif x['category'] == 'Дети':
+                base_id, second_id = second_id, base_id
+                is_parent = True
+
+            relation_dump = {
+                'base_id': base_id,
+                'second_id': second_id,
+                'is_parent': is_parent,
+                'is_wifehusband': is_wifehusband}
+            relation = relation_schema.load(relation_dump)            
+
             try:
-                item.save_to_db()
-                return {'message': 'Data posted.'}, 201
+                relation.save_to_db()
             except:
-                return {'message': 'An error occurre inserting the item.'}, 500
+                return {'message': 'An error occurre inserting the relation.'}, 500
