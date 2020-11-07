@@ -21,8 +21,6 @@
 ]
 ```
 
-## Формат объектов
-
 Формирует в объекты item
 { "id": int, "name": str, "uri": str, "sex": str, "born": str, "died": str }
 и в объекты relation
