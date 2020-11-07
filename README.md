@@ -1,4 +1,4 @@
-Gerald Manager
+##Gerald Manager
 
 Принимает информацию в слеующем виде:
 [
