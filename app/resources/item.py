@@ -59,23 +59,28 @@ class ItemList(Resource):
 
     def post(self):
         data = request.get_json()
-
         ids = []
-
         for x in data:
-
-            pprint(x)
             
             item = ItemModel.find_by_uri(x['uri'])
             if not item:
-                item_dump = {'name': x['name'], 'uri': x['uri']}
+                item_dump = {
+                        'name': x['name'],
+                        'uri': x['uri'],
+                        'sex': x['sex'],
+                        'born': x['born'],
+                        'died': x['died'],
+                        }
                 item = item_schema.load(item_dump)
                 try:
-                    item.save_to_db()                
+                    item.save_to_db()           
                 except:
-                    return {'message': 'An error occurre inserting the item.'}, 500            
+                    return {'message': 'An error occurre inserting the item.'}, 500
             
-            ids.append({'id_db': item.id, 'id_dump': x['id']})
+            ids.append({
+                'id_db': item.id, 
+                'id_dump': x['id']
+                })
 
             if x['relation_id'] == -1:
                 continue
@@ -88,15 +93,11 @@ class ItemList(Resource):
 
             is_parent = False
             is_wifehusband = False
-            if x['category'] == 'Отец':
+            if x['category'] == 'parent':
                 is_parent = True
-            elif x['category'] == 'Мать':
-                is_parent = True
-            elif x['category'] == 'Супруг':
+            elif x['category'] == 'wifehusband':
                 is_wifehusband = True
-            elif x['category'] == 'Супруга':
-                is_wifehusband = True
-            elif x['category'] == 'Дети':
+            elif x['category'] == 'child':
                 base_id, second_id = second_id, base_id
                 is_parent = True
 
