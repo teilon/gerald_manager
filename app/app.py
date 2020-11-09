@@ -4,6 +4,7 @@ from flask_restful import Api
 from db import db, SQLALCHEMY_DATABASE_URI
 from ma import ma
 from resources.item import Item, ItemList
+from resources.home import Home
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
@@ -18,7 +19,7 @@ api = Api(app)
 def create_tables():
     db.create_all()
 
-
+api.add_resource(Home, '/')
 api.add_resource(Item, '/item/<string:name>')
 api.add_resource(ItemList, '/items')
 
